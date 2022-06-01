@@ -41,16 +41,13 @@ def main():
         train()
     elif "enjoy" in sys.argv:
         enjoy()
-    elif "tensorboard" in sys.argv:
-        call = "tensorboard --logdir=tune_runs"
-        os.system(call)
     else:
         print("Please specify either 'train' or 'enjoy' or 'tensorboard'.")
 
 
 def train():
     # How many time steps to run the experiment for.
-    time_steps_total = 10_000_000
+    time_steps_total = 1_000_000
 
     # Run the experiment.
     results = tune.run(

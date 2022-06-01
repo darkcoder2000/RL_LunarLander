@@ -1,0 +1,19 @@
+{
+  "env": "LunarLander-v2",
+  "evaluation_config": {
+    "render_env": true
+  },
+  "evaluation_num_workers": 1,
+  "framework": "torch",
+  "model": {
+    "fcnet_activation": "relu",
+    "fcnet_hiddens": [
+      128,
+      128,
+      128,
+      128
+    ]
+  },
+  "num_gpus": 0,
+  "num_workers": 4
+}
