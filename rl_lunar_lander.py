@@ -39,10 +39,10 @@ config = {
 def main():
     if "train" in sys.argv:
         train()
-    elif "enjoy" in sys.argv:
-        enjoy()
+    elif "run" in sys.argv:
+        run()
     else:
-        print("Please specify either 'train' or 'enjoy' or 'tensorboard'.")
+        print("Please specify either 'train' or 'run'.")
 
 
 def train():
@@ -86,7 +86,7 @@ def train():
     print("\a")
     return
 
-def enjoy():
+def run():
     # Find all the occurences of params.json in the directory tune_runs.
     params_paths = glob.glob(os.path.join(local_dir, "**", "params.json"), recursive=True)
     params_paths = sorted(params_paths)
@@ -141,7 +141,6 @@ def enjoy():
     observation = environment.reset()
     done = False
     while not done:
-        #print(observation["carriers_next_station_distance"])
         action = agent.compute_action(observation)
             
         # Execute the action.
