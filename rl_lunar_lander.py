@@ -6,18 +6,21 @@ import gym
 from ray import tune
 from ray.rllib import agents
 from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.agents.a3c import A3CTrainer
+
+env_id = "MountainCarContinuous-v0"
 
 # Where the trained agents and the logs will end up.
-local_dir = "tune_runs_lunarlander"
+local_dir = f"tune_runs_{env_id}"
 
 # Configure the algorithm.
 config = {
     # Environment (RLlib understands openAI gym registered strings).
-    "env": "LunarLander-v2",
+    "env": "env_id",
     "num_gpus": 0,
     # Use 2 environment workers (aka "rollout workers") that parallelly
     # collect samples from their own environment clone(s).
-    "num_workers": 4,
+    "num_workers": 1,
     # Change this to "framework: torch", if you are using PyTorch.
     # Also, use "framework: tf2" for tf2.x eager execution.
     "framework": "torch",
@@ -51,7 +54,8 @@ def train():
 
     # Run the experiment.
     results = tune.run(
-        agents.ppo.PPOTrainer,
+        #agents.ppo.PPOTrainer,
+        A3CTrainer,
         config=config,
         metric="episode_reward_mean",
         mode="max",
@@ -137,7 +141,7 @@ def run():
 
     # Create the environment.
     print("Creating the environment.")
-    environment = gym.make('LunarLander-v2')
+    environment = gym.make(env_id)
     observation = environment.reset()
     done = False
     while not done:
