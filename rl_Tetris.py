@@ -3,13 +3,15 @@ import os
 import glob
 import sys
 import gym
-from ray import tune
 from ray.rllib import agents
+from ray import tune
+
 from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.agents.a3c import A3CTrainer
+from ray.rllib.agents.impala import ImpalaTrainer
 
-from stable_baselines3.common.cmd_util import make_atari_env
-from stable_baselines3.common.vec_env import VecFrameStack
+# from stable_baselines3.common.cmd_util import make_atari_env
+# from stable_baselines3.common.vec_env import VecFrameStack
 
 env_id = 'ALE/Tetris-v5'
 
@@ -35,18 +37,36 @@ local_dir = f"tune_runs_{env_id}"
 #     lambda env_config: create_evironment(env_config)
 # )
 
+    # config:
+    #     lambda: 0.95
+    #     kl_coeff: 0.5
+    #     clip_rewards: True
+    #     clip_param: 0.1
+    #     vf_clip_param: 10.0
+    #     entropy_coeff: 0.01
+    #     train_batch_size: 5000
+    #     sample_batch_size: 100
+    #     sgd_minibatch_size: 500
+    #     num_sgd_iter: 10
+    #     num_workers: 10
+    #     num_envs_per_worker: 5
+    #     batch_mode: truncate_episodes
+    #     observation_filter: NoFilter
+    #     vf_share_layers: true
+    #     num_gpus: 1
+
 # Configure the algorithm.
-config = {
+config_PPO = {
     # Environment (RLlib understands openAI gym registered strings).
     "env": "ALE/Tetris-v5",
     "num_gpus": 1,
     # Use 2 environment workers (aka "rollout workers") that parallelly
     # collect samples from their own environment clone(s).
-    "num_workers": 1,
+    "num_workers": 2,
     # Change this to "framework: torch", if you are using PyTorch.
     # Also, use "framework: tf2" for tf2.x eager execution.
     "framework": "torch",
-    "log_level": "INFO",
+    #"log_level": "INFO",
     # Tweak the default model provided automatically by RLlib,
     # given the environment's observation- and action spaces.
     # "model": {
@@ -59,7 +79,23 @@ config = {
     # Only for evaluation runs, render the env.
     "evaluation_config": {
         "render_env": True,
-    },
+    },    
+    "lambda":0.95,
+    "kl_coeff": 0.5,
+    "clip_rewards": True,
+    "clip_param": 0.1,
+    "vf_clip_param": 10.0,
+    "entropy_coeff": 0.01,
+    # "train_batch_size": 5000,
+    # "sample_batch_size": 100,
+    # "sgd_minibatch_size": 500,
+    # "num_sgd_iter": 10,
+    "num_workers": 3,
+    "num_envs_per_worker": 5,
+    "batch_mode": "truncate_episodes",
+    "observation_filter": "NoFilter",
+    #"vf_share_layers": True,
+    "num_gpus": 1
 }
 
 def main():
@@ -73,19 +109,18 @@ def main():
 
 def train():
     # How many time steps to run the experiment for.
-    time_steps_total = 5_000
+    time_steps_total = 1_000_000    
 
     # Run the experiment.
     results = tune.run(
-        #agents.ppo.PPOTrainer,
-        A3CTrainer,
-        config=config,
+        PPOTrainer,
+        config=config_PPO,
         metric="episode_reward_mean",
         mode="max",
         stop={"timesteps_total": time_steps_total},
         checkpoint_at_end=True,
         checkpoint_freq=10,
-        local_dir=local_dir,
+        local_dir=local_dir,        
     )
 
     # Get the checkpoints.
