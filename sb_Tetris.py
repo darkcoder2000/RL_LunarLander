@@ -6,12 +6,23 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.cmd_util import make_atari_env
 from stable_baselines3.common.vec_env import VecFrameStack
+from stable_baselines3.common.atari_wrappers import AtariWrapper
 
 
 from file_helper import correct_folder_name
 
 #define the environment to use
 env_id = 'ALE/Tetris-v5'
+
+'''
+Tetris env is 
+Actions Discrete(5)
+Observations Box(210, 160, 3), uint8)
+
+Supported Algorithms SB1: A2C, ACER, ACKTR, GAIL, DQN, PPO, TRPO
+Supported Algorithms SB3: A2C, DQN, PPO
+
+'''
 
 #define log folder
 env_folder_name = correct_folder_name(env_id)
@@ -20,7 +31,7 @@ log_dir = f"./log/{env_folder_name}"
 #define checkpoint folder
 checkpoint_dir = f"./checkpoints/{env_folder_name}"
 
-training_steps = 4000000
+training_steps = 1_000_000
 
 
 class TrainAndLoggingCallback(BaseCallback):
@@ -42,16 +53,22 @@ class TrainAndLoggingCallback(BaseCallback):
         return True
 
 
-def train():
+def get_env():
     # Create environment
-
     env = make_atari_env(env_id, n_envs=4, seed=0)
+    #env = AtariWrapper(env, noop_max=10,clip_reward=False)
     # Frame-stacking with 4 frames
     env = VecFrameStack(env, n_stack=4)
+    return env
+
+def train():
+    
+    env = get_env()
 
     # Instantiate the agent
-    #model = DQN('MlpPolicy', env, tensorboard_log=log_dir, verbose=1)
-    model = PPO('CnnPolicy', env, tensorboard_log=log_dir, verbose=1)
+    model = DQN('MlpPolicy', env, tensorboard_log=log_dir, verbose=1)
+    #model = DQN('CnnPolicy', env, tensorboard_log=log_dir, verbose=1)
+    #model = PPO('CnnPolicy', env, tensorboard_log=log_dir, verbose=1)
 
     callback = TrainAndLoggingCallback(check_freq=10000, save_path=checkpoint_dir)
     
@@ -59,8 +76,47 @@ def train():
     model.learn(total_timesteps=training_steps, callback=callback)
 
     # Save the agent
-    #model.save("dqn_{env_folder_name}")
-    model.save(f"ppo_{env_folder_name}")
+    model.save("dqn_{env_folder_name}")
+    #model.save(f"ppo_{env_folder_name}")
+    
+    del model  # delete trained model to demonstrate loading
+
+def train_her():
+    from stable_baselines3 import HerReplayBuffer, SAC, DDPG, TD3
+    from stable_baselines3.common.noise import NormalActionNoise
+
+    env = get_env()
+
+    # Create 4 artificial transitions per real transition
+    n_sampled_goal = 4
+
+    # SAC hyperparams:
+    model = DQN(
+        "MultiInputPolicy",
+        env,
+        replay_buffer_class=HerReplayBuffer,
+        replay_buffer_kwargs=dict(
+            n_sampled_goal=n_sampled_goal,
+            goal_selection_strategy="future",
+            # IMPORTANT: because the env is not wrapped with a TimeLimit wrapper
+            # we have to manually specify the max number of steps per episode
+            max_episode_length=5000,
+            online_sampling=True,
+            ),
+        verbose=1,
+        # buffer_size=int(1e6),
+        # learning_rate=1e-3,
+        # gamma=0.95,
+        # batch_size=256,
+        # policy_kwargs=dict(net_arch=[256, 256, 256]),
+        tensorboard_log=log_dir,
+    )
+
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=checkpoint_dir)
+
+    model.learn(total_timesteps=training_steps, callback=callback)
+
+    model.save(f"her_{env_folder_name}")
     
     del model  # delete trained model to demonstrate loading
 
