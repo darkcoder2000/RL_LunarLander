@@ -1,7 +1,8 @@
 import gym
 import sys, os
+from ray import get
 
-from stable_baselines3 import DQN, PPO
+from stable_baselines3 import DQN, PPO, A2C
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.cmd_util import make_atari_env
@@ -31,7 +32,7 @@ log_dir = f"./log/{env_folder_name}"
 #define checkpoint folder
 checkpoint_dir = f"./checkpoints/{env_folder_name}"
 
-training_steps = 1_000_000
+training_steps = 2_000_000
 
 
 class TrainAndLoggingCallback(BaseCallback):
@@ -55,29 +56,96 @@ class TrainAndLoggingCallback(BaseCallback):
 
 def get_env():
     # Create environment
-    env = make_atari_env(env_id, n_envs=4, seed=0)
-    #env = AtariWrapper(env, noop_max=10,clip_reward=False)
-    # Frame-stacking with 4 frames
+    env = make_atari_env('ALE/Tetris-v5', n_envs=4, seed=0)
     env = VecFrameStack(env, n_stack=4)
     return env
 
-def train():
+def train_all():
     
+    #train_dqn_mlp()
+    #train_dqn_cnn()
+    # train_ppo_cnn()
+    # train_ppo_mlp()
+    # train_a2c_mlp()
+    # train_a2c_cnn()
+
+
+def train_dqn_mlp():    
     env = get_env()
+    model = DQN('MlpPolicy', env, tensorboard_log=f"{log_dir}_mlp", verbose=1)
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=f"{checkpoint_dir}_dqn_mlp")
 
-    # Instantiate the agent
-    model = DQN('MlpPolicy', env, tensorboard_log=log_dir, verbose=1)
-    #model = DQN('CnnPolicy', env, tensorboard_log=log_dir, verbose=1)
-    #model = PPO('CnnPolicy', env, tensorboard_log=log_dir, verbose=1)
-
-    callback = TrainAndLoggingCallback(check_freq=10000, save_path=checkpoint_dir)
-    
     # Train the agent
     model.learn(total_timesteps=training_steps, callback=callback)
 
     # Save the agent
-    model.save("dqn_{env_folder_name}")
-    #model.save(f"ppo_{env_folder_name}")
+    model.save(f"dqn_{env_folder_name}_mlp")
+    
+    del model  # delete trained model to demonstrate loading
+
+def train_dqn_cnn():    
+    env = get_env()
+    model = DQN('CnnPolicy', env, tensorboard_log=f"{log_dir}_cnn", verbose=1)
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=f"{checkpoint_dir}_dqn_cnn")
+
+    # Train the agent
+    model.learn(total_timesteps=training_steps, callback=callback)
+
+    # Save the agent
+    model.save(f"dqn_{env_folder_name}_cnn")
+    
+    del model  # delete trained model to demonstrate loading
+
+
+def train_ppo_mlp():    
+    env = get_env()
+    model = PPO('MlpPolicy', env, tensorboard_log=f"{log_dir}_mlp", verbose=1)
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=f"{checkpoint_dir}_ppo_mlp")
+
+    # Train the agent
+    model.learn(total_timesteps=training_steps, callback=callback)
+
+    # Save the agent
+    model.save(f"ppo_{env_folder_name}_mlp")
+    
+    del model  # delete trained model to demonstrate loading
+
+def train_ppo_cnn():    
+    env = get_env()
+    model = PPO('CnnPolicy', env, tensorboard_log=f"{log_dir}_cnn", verbose=1)
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=f"{checkpoint_dir}_ppo_cnn")
+
+    # Train the agent
+    model.learn(total_timesteps=training_steps, callback=callback)
+
+    # Save the agent
+    model.save(f"ppo_{env_folder_name}_cnn")
+    
+    del model  # delete trained model to demonstrate loading
+
+def train_a2c_mlp():    
+    env = get_env()
+    model = A2C('MlpPolicy', env, tensorboard_log=f"{log_dir}_mlp", verbose=1)
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=f"{checkpoint_dir}_a2c_mlp")
+
+    # Train the agent
+    model.learn(total_timesteps=training_steps, callback=callback)
+
+    # Save the agent
+    model.save(f"a2c_{env_folder_name}_mlp")
+    
+    del model  # delete trained model to demonstrate loading
+
+def train_a2c_cnn():    
+    env = get_env()
+    model = A2C('CnnPolicy', env, tensorboard_log=f"{log_dir}_cnn", verbose=1)
+    callback = TrainAndLoggingCallback(check_freq=10000, save_path=f"{checkpoint_dir}_a2c_cnn")
+
+    # Train the agent
+    model.learn(total_timesteps=training_steps, callback=callback)
+
+    # Save the agent
+    model.save(f"a2c_{env_folder_name}_cnn")
     
     del model  # delete trained model to demonstrate loading
 
@@ -150,6 +218,7 @@ def manual():
             cmd = 0
         obs, rewards, dones, info = env.step(cmd)
         print(f"Reward: {rewards}")
+        print(f"info: {info}")
         if dones:
             obs = env.reset()
 
@@ -194,9 +263,8 @@ def run():
 
 def continue_training():
 
-    env = make_atari_env(env_id, n_envs=4, seed=0)
-    # Frame-stacking with 4 frames
-    env = VecFrameStack(env, n_stack=4)
+
+    env = get_env()
 
     # Load the trained agent
     # NOTE: if you have loading issue, you can pass `print_system_info=True`
@@ -215,7 +283,7 @@ def continue_training():
 
 def main():
     if "train" in sys.argv:
-        train()
+        train_all()
     elif "manual" in sys.argv:
         manual()
     elif "run" in sys.argv:
