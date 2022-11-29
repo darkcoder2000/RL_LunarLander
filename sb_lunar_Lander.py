@@ -4,8 +4,11 @@ import sys
 from stable_baselines3 import DQN
 from stable_baselines3.common.evaluation import evaluate_policy
 
+env_id = "LunarLander-v2"
+local_dir = f"sb_runs_{env_id}"
+
 # Create environment
-env = gym.make('LunarLander-v2')
+env = gym.make(env_id)
 
 def train():
     # Instantiate the agent

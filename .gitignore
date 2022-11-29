@@ -3,4 +3,5 @@ __pycache__
 .vscode
 checkpoints
 log
-*.zip
+tune_runs*
+sb_runs*
