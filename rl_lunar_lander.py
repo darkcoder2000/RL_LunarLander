@@ -8,7 +8,7 @@ from ray.rllib import agents
 from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.agents.a3c import A3CTrainer
 
-env_id = "MountainCarContinuous-v0"
+env_id = "LunarLander-v2"
 
 # Where the trained agents and the logs will end up.
 local_dir = f"tune_runs_{env_id}"

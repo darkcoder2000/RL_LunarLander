@@ -40,10 +40,10 @@ def enjoy():
 def main():
     if "train" in sys.argv:
         train()
-    elif "enjoy" in sys.argv:
+    elif "run" in sys.argv:
         enjoy()
     else:
-        print("Please specify either 'train' or 'enjoy' or 'tensorboard'.")
+        print("Please specify either 'train' or 'run' or 'tensorboard'.")
 
 if __name__ == "__main__":
     main()

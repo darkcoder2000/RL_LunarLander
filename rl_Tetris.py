@@ -59,7 +59,7 @@ local_dir = f"tune_runs_{env_id}"
 config_PPO = {
     # Environment (RLlib understands openAI gym registered strings).
     "env": "ALE/Tetris-v5",
-    "num_gpus": 1,
+    "num_gpus": 0,
     # Use 2 environment workers (aka "rollout workers") that parallelly
     # collect samples from their own environment clone(s).
     "num_workers": 2,
@@ -94,8 +94,6 @@ config_PPO = {
     "num_envs_per_worker": 5,
     "batch_mode": "truncate_episodes",
     "observation_filter": "NoFilter",
-    #"vf_share_layers": True,
-    "num_gpus": 1
 }
 
 def main():
@@ -109,7 +107,7 @@ def main():
 
 def train():
     # How many time steps to run the experiment for.
-    time_steps_total = 1_000_000    
+    time_steps_total = 2_000_000    
 
     # Run the experiment.
     results = tune.run(
